@@ -3,91 +3,118 @@
 <head>
     <meta charset="UTF-8">
     <title>リダイレクト中..</title>
-</head>
-<body style="text-align: center;">
-    <img src="ebio.png" alt="logo">
-    <br>
-    <!-- admax -->
-    <script src="https://adm.shinobi.jp/s/fb4f4e2a95f3e19d0ea898b39d1ee052"></script>
-    <!-- admax -->
-    <br>
-    <!-- 【修正】id="redirect-btn" を追加し、hrefはJavaScriptで制御するため空欄にしました -->
-    <a href="javascript:void(0);" id="redirect-btn" class="outline-btn">次へ</a>
-    
     <style>
-    .outline-btn {
-        display: inline-block;
-        padding: 12px 24px;
-        text-decoration: none;
-        border: 2px solid #333333;
-        color: #333333;
-        background-color: transparent;
-        border-radius: 4px;
-        font-weight: bold;
-        transition: all 0.3s;
-    }
+        body {
+            text-align: center;
+            margin: 0;
+            padding-top: 20px;
+        }
 
-    .outline-btn:hover {
-        background-color: #333333;
-        color: #ffffff;
-        cursor: pointer;
-    }
-    /* ボタンが無効な状態（URL読み込み中など）のスタイル */
-    .outline-btn.disabled {
-        border-color: #999999;
-        color: #999999;
-        cursor: not-allowed;
-    }
+        /* 広告枠をCSSで拡大 */
+        .ad-container {
+            display: inline-block;
+            transform: scale(2);
+            transform-origin: top center;
+            margin-top: 20px;
+        }
+
+        /* 右上の「x」ボタン */
+        .close-btn {
+            position: fixed;
+            top: 15px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            line-height: 36px;
+            font-size: 24px;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            text-decoration: none;
+            border: 2px solid #333333;
+            color: #333333;
+            background-color: #ffffff;
+            border-radius: 50%;
+            font-weight: bold;
+            transition: all 0.3s;
+            z-index: 9999;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .close-btn:hover {
+            background-color: #333333;
+            color: #ffffff;
+            cursor: pointer;
+        }
+
+        .close-btn.disabled {
+            border-color: #999999;
+            color: #999999;
+            cursor: not-allowed;
+            background-color: #f0f0f0;
+            box-shadow: none;
+        }
     </style>
-    
-    <h1 style="color:red">※注意 このサイトはリンク先の安全を保障するものではありません。</h1>
-    <h2 style="color:red">リンク先のいかなる問題も、運営者は負いません。</h2>
+</head>
+<body>
+    <img src="ebio.png" alt="logo"><br>
 
-    <!-- 💡 【追加】URLパラメータを読み込んで、list.txtからURLを取得するプログラム -->
+    <!-- 右上の x ボタン -->
+    <a href="javascript:void(0);" id="redirect-btn" class="close-btn" title="閉じる">×</a>
+
+    <!-- 広告エリア -->
+    <div class="ad-container">
+        <!-- admax -->
+        <script src="https://adm.shinobi.jp/s/9032fb76d0a4a05e27cb7ca7e9c0eb17"></script>
+        <!-- admax -->
+    </div>
+
     <script>
     window.addEventListener('DOMContentLoaded', () => {
         const btn = document.getElementById('redirect-btn');
         
-        // 1. URLの「?url=番号」を取得する
         const urlParams = new URLSearchParams(window.location.search);
-        const urlIndex = parseInt(urlParams.get('url'), 10); // 例: ?url=1 なら 1
+        const urlIndex = parseInt(urlParams.get('url'), 10);
 
-        // 番号が正しく指定されていない場合は、ボタンを無効化して処理を終了
         if (isNaN(urlIndex) || urlIndex < 1) {
-            btn.innerText = "リンクエラー (番号が不正です)";
             btn.classList.add('disabled');
             return;
         }
 
-        // 2. 同じフォルダの「list.txt」を読み込む
         fetch('list.txt')
             .then(response => {
-                if (!response.ok) {
-                    throw new Error('list.txt が見つからないか、読み込めません');
-                }
+                if (!response.ok) throw new Error();
                 return response.text();
             })
             .then(text => {
-                // テキストを行ごとに分割（改行コードで分ける）
-                // 空行を除外したい場合は「.filter(line => line.trim() !== '')」を挟みます
                 const lines = text.split(/\r?\n/);
-
-                // ?url=1 は配列の 0番目 (urlIndex - 1) になる
                 const targetUrl = lines[urlIndex - 1];
 
                 if (targetUrl && targetUrl.trim().startsWith('http')) {
-                    // 3. 正しいURLが見つかったら、ボタンのリンク先に設定する
+                    // href属性に直接URLをセット
                     btn.href = targetUrl.trim();
                 } else {
-                    btn.innerText = "リンクエラー (URLが見つかりません)";
                     btn.classList.add('disabled');
                 }
             })
-            .catch(error => {
-                console.error(error);
-                btn.innerText = "エラーが発生しました";
+            .catch(() => {
                 btn.classList.add('disabled');
             });
+
+        // ボタンクリック時に確認ダイアログを表示
+        btn.addEventListener('click', (e) => {
+            if (btn.classList.contains('disabled')) {
+                e.preventDefault();
+                alert("有効なURLが指定されていません。");
+                return;
+            }
+
+            const warningMessage = "【注意】\nこのサイトはリンク先の安全を保障するものではありません。\nリンク先のいかなる問題も、運営者は負いません。\n\n移動しますか？";
+            
+            // 「キャンセル」を押した場合は移動をキャンセル
+            if (!confirm(warningMessage)) {
+                e.preventDefault();
+            }
+        });
     });
     </script>
 </body>
