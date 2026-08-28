@@ -26,7 +26,7 @@
             width: 40px;
             height: 40px;
             line-height: 36px;
-            font-size: 24px;
+            font-size: 18px; /* カウントダウン表示用に少し小さく調整 */
             font-family: Arial, sans-serif;
             text-align: center;
             text-decoration: none;
@@ -40,14 +40,15 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
 
-        .close-btn:hover {
+        .close-btn:not(.disabled):hover {
             background-color: #333333;
             color: #ffffff;
             cursor: pointer;
         }
 
+        /* カウントダウン中・無効化時のスタイル */
         .close-btn.disabled {
-            border-color: #999999;
+            border-color: #cccccc;
             color: #999999;
             cursor: not-allowed;
             background-color: #f0f0f0;
@@ -58,8 +59,8 @@
 <body>
     <img src="ebio.png" alt="logo"><br>
 
-    <!-- 右上の x ボタン -->
-    <a href="javascript:void(0);" id="redirect-btn" class="close-btn" title="閉じる">×</a>
+    <!-- 右上の x ボタン（初期値はカウントダウン用） -->
+    <a href="javascript:void(0);" id="redirect-btn" class="close-btn disabled" title="お待ちください">3</a>
 
     <!-- 広告エリア -->
     <div class="ad-container">
@@ -71,46 +72,68 @@
     <script>
     window.addEventListener('DOMContentLoaded', () => {
         const btn = document.getElementById('redirect-btn');
-        
+        let destinationUrl = "";
+        let isTimerFinished = false;
+
         const urlParams = new URLSearchParams(window.location.search);
         const urlIndex = parseInt(urlParams.get('url'), 10);
 
-        if (isNaN(urlIndex) || urlIndex < 1) {
-            btn.classList.add('disabled');
-            return;
+        // 1. URL情報の取得処理
+        if (!isNaN(urlIndex) && urlIndex >= 1) {
+            fetch('list.txt')
+                .then(response => {
+                    if (!response.ok) throw new Error();
+                    return response.text();
+                })
+                .then(text => {
+                    const lines = text.split(/\r?\n/);
+                    const targetUrl = lines[urlIndex - 1];
+
+                    if (targetUrl && targetUrl.trim().startsWith('http')) {
+                        destinationUrl = targetUrl.trim();
+                        // タイマーがすでに終わっていればhrefをセット
+                        if (isTimerFinished) {
+                            btn.href = destinationUrl;
+                            btn.classList.remove('disabled');
+                        }
+                    }
+                })
+                .catch(() => {});
         }
 
-        fetch('list.txt')
-            .then(response => {
-                if (!response.ok) throw new Error();
-                return response.text();
-            })
-            .then(text => {
-                const lines = text.split(/\r?\n/);
-                const targetUrl = lines[urlIndex - 1];
-
-                if (targetUrl && targetUrl.trim().startsWith('http')) {
-                    // href属性に直接URLをセット
-                    btn.href = targetUrl.trim();
+        // 2. 3秒のカウントダウンタイマー
+        let countdown = 3;
+        const timer = setInterval(() => {
+            countdown--;
+            if (countdown > 0) {
+                btn.innerText = countdown;
+            } else {
+                clearInterval(timer);
+                isTimerFinished = true;
+                
+                // URL取得が成功していればボタンを有効化
+                if (destinationUrl) {
+                    btn.innerText = "×";
+                    btn.style.fontSize = "24px";
+                    btn.href = destinationUrl;
+                    btn.classList.remove('disabled');
+                    btn.title = "閉じる";
                 } else {
-                    btn.classList.add('disabled');
+                    btn.innerText = "×";
+                    btn.title = "有効なURLがありません";
                 }
-            })
-            .catch(() => {
-                btn.classList.add('disabled');
-            });
+            }
+        }, 1000);
 
-        // ボタンクリック時に確認ダイアログを表示
+        // 3. クリック時処理
         btn.addEventListener('click', (e) => {
-            if (btn.classList.contains('disabled')) {
+            if (btn.classList.contains('disabled') || !isTimerFinished) {
                 e.preventDefault();
-                alert("有効なURLが指定されていません。");
                 return;
             }
 
             const warningMessage = "【注意】\nこのサイトはリンク先の安全を保障するものではありません。\nリンク先のいかなる問題も、運営者は負いません。\n\n移動しますか？";
             
-            // 「キャンセル」を押した場合は移動をキャンセル
             if (!confirm(warningMessage)) {
                 e.preventDefault();
             }
