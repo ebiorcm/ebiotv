@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<head>
+    <meta charset="UTF-8">
+    <title>リダイレクト中..</title>
+    <!-- 【修正】公式のreCAPTCHA読み込み用アドレスに変更しました -->
+    <script src="https://google.com" async defer></script>
+</head>
+<body style="text-align: center;">
+    <img src="Ebio.png" alt="logo">
+    <br>
+    <!-- admax -->
+    <script src="https://shinobi.jp"></script>
+    <!-- admax -->
+    <br>
+
+    <!-- 2. フォームとボタンのHTML -->
+    <!-- 【重要】action="送信先のURL" を、移動させたいサイトのURLに書き換えてください -->
+    <form id="myForm" action="送信先のURL" method="POST">
+        
+        <!-- ここに他の入力項目（名前やメールなど）が入ります -->
+
+        <!-- 枠付きデザインのreCAPTCHAボタン -->
+        <button class="g-recaptcha outline-btn" 
+                data-sitekey="6Lekd5wtAAAAAC21iH4LttKGzB5f-i4E75G8jQ1R" 
+                data-callback="onSubmit" 
+                data-action="submit">次へ</button>
+
+</form>
+
+    <!-- 3. デザイン（CSS）※ご提示いただいたコードをボタン用に微調整 -->
+    <style>
+    .outline-btn {
+        /* ボタンをリンクからボタンの形に変える設定 */
+        display: inline-block;
+        padding: 12px 24px;       /* ボタンの中の余白（上下 左右） */
+        text-decoration: none;    /* リンクの下線を消す */
+        font-size: 16px;          /* 文字の大きさ */
+        
+        /* 枠線と文字の設定 */
+        border: 2px solid #333333; /* 線の太さ 線の種類 線の色 */
+        color: #333333;           /* 文字の色 */
+        background-color: transparent; /* 背景を透明にする */
+        
+        /* 見た目を整える設定 */
+        border-radius: 4px;       /* 角を少し丸くする */
+        font-weight: bold;        /* 文字を太字にする */
+        transition: all 0.3s;     /* マウスを乗せた時の動きをなめらかにする */
+    }
+
+    /* マウスを乗せた時（ホバー時）の変化 */
+    .outline-btn:hover {
+        background-color: #333333; /* 背景を黒にする */
+        color: #ffffff;           /* 文字を白にする */
+        cursor: pointer;          /* マウスカーソルを指の形にする */
+    }
+    </style>
+
+    <!-- 4. 認証成功時にフォームを送信するためのJavaScript -->
+    <script>
+    function onSubmit(token) {
+        // reCAPTCHAの検証が成功したら、フォームを自動送信する
+        document.getElementById("myForm").submit();
+    }
+    </script>
+    <h1 style="color:red">※注意 このサイトはリンク先の安全を保障するものではありません。</h1>
+    <h2 style="color:red">リンク先のいかなる問題も、運営者は負いません。</h2>
+</body>
+</html>
